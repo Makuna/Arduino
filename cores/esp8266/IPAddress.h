@@ -35,9 +35,12 @@
 #define IP_IS_V4_VAL(x) (1)
 #define IP_SET_TYPE_VAL(x,y) do { (void)0; } while (0)
 #define IP_ANY_TYPE (&ip_addr_any)
+#define IP4_ADDR_ANY IPADDR_ANY
 #define IP4_ADDR_ANY4 IPADDR_ANY
 #define IPADDR4_INIT(x) { x }
 #define CONST /* nothing: lwIP-v1 does not use const */
+#define ip4_addr_netcmp ip_addr_netcmp
+#define netif_dhcp_data(netif) ((netif)->dhcp)
 #else // lwIP-v2+
 #define CONST const
 #if !LWIP_IPV6
@@ -149,8 +152,8 @@ class IPAddress: public Printable {
         /*
                lwIP address compatibility
         */
+        IPAddress(const ipv4_addr& fw_addr)   { setV4(); v4() = fw_addr.addr; }
         IPAddress(const ipv4_addr* fw_addr)   { setV4(); v4() = fw_addr->addr; }
-        IPAddress(const ip_addr_t& lwip_addr) { _ip = lwip_addr; }
 
         operator       ip_addr_t () const { return  _ip; }
         operator const ip_addr_t*() const { return &_ip; }
@@ -163,7 +166,8 @@ class IPAddress: public Printable {
 
 #if LWIP_IPV6
 
-        IPAddress(const ip_addr_t* from);
+        IPAddress(const ip_addr_t& lwip_addr) { ip_addr_copy(_ip, lwip_addr); }
+        IPAddress(const ip_addr_t* lwip_addr) { ip_addr_copy(_ip, *lwip_addr); }
 
         uint16_t* raw6()
         {
